@@ -7,7 +7,6 @@
 
   vars_files:
     - /home/ubuntu/.secrets/secrets.yaml
-    - /km-gcp/util/setup/vars/main.yml
     - vars/main.yaml
   
   roles:
