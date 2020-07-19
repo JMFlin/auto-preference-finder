@@ -1,0 +1,34 @@
+---
+
+- name: Check if bucket exists
+  command: gsutil ls -b gs://{{ secrets.projects.bot.bucket }}
+  register: bucket
+
+- name: Cluster configs
+  debug: var=bucket.stdout_lines
+
+- name: Create Cloud Storage bucket
+  shell: "gsutil ls -b gs://{{ secrets.projects.bot.bucket }} || gsutil mb -c standard -l {{ secrets.project.region }} ASIA gs:/{{ secrets.projects.bot.bucket }}"
+
+- name: Set kubeconfig for Cloud Functions
+  command: gsutil cp ~/.kube/config gs://{{ secrets.projects.bot.bucket }}/kubeconfig
+
+- name: Copy template
+  copy: 
+    src="{{ role_path }}/tasks/template.py"
+    dest="{{ role_path }}/tasks/main.py"
+
+- name: Replace placeholder bucket name in code
+  replace:
+    path: "{{ role_path }}/tasks/main.py"
+    regexp: 'secrets.projects.bot.bucket'
+    replace: '{{ secrets.projects.bot.bucket }}'
+
+- name: Create cloud function for triggering training task
+  shell: "gcloud functions deploy gcs_pod_trigger \
+  --region {{ secrets.project.region }} \
+  --runtime python37 \
+  --service-account {{ secrets.project.service_account }} \
+  --max-instances 10  \
+  --trigger-resource {{ secrets.projects.bot.bucket }} \
+  --trigger-event google.storage.object.finalize"
