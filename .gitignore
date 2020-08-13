@@ -27,6 +27,7 @@ checkpoint
 cp.ckpt.*
 
 roles/modeling/fast/training_1/
+roles/modeling/images/
 roles/models/experiments/
 roles/models/images/
 roles/models/saved_model/
