@@ -23,11 +23,13 @@ __pycache__/
 *.csv
 *.xlsx
 *.tfrecords
+*.txt
 checkpoint
 cp.ckpt.*
 
 roles/modeling/fast/training_1/
 roles/modeling/images/
+roles/modeling/saved_model/
 roles/models/experiments/
 roles/models/images/
 roles/models/saved_model/
