@@ -22,7 +22,14 @@ __pycache__/
 *.log
 *.csv
 *.xlsx
-.tfrecords
+*.tfrecords
+checkpoint
+cp.ckpt.*
 
+roles/modeling/fast/training_1/
 roles/models/experiments/
 roles/models/images/
+roles/models/saved_model/
+roles/frontend/*.txt
+roles/frontend/images/
+roles/frontend/files/

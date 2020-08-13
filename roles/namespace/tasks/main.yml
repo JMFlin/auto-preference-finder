@@ -1,0 +1,31 @@
+---
+- name: Check if namespace already exists
+  shell: kubectl get namespaces | grep {{ namespace }} | cat
+  register: status
+  ignore_errors: True
+
+- name: Copy tempalte
+  template: 
+    src="{{ role_path }}/vars/template-namespace.yml"
+    dest="{{ role_path }}/vars/{{ namespace }}-namespace.yml"
+
+- name: Create namespace
+  command: kubectl create -f {{ role_path }}/vars/{{ namespace }}-namespace.yml
+  when: "'Active' not in status.stdout"
+
+- name: Set default
+  command: kubectl config set-context $(kubectl config current-context) --namespace={{ namespace }}
+  when: "'Active' not in status.stdout"
+
+- name: Remove files
+  file:
+    state: absent
+    path: "{{ role_path }}/vars/{{ namespace }}-namespace.yml"
+
+- name: Register output version
+  shell: kubectl get namespaces | grep {{ namespace }}
+  register: config
+
+- name: namespace config
+  debug: var=config.stdout_lines
+  

@@ -176,3 +176,5 @@ if __name__ == '__main__':
     FLAGS.set_default('lr', 0.03)
     FLAGS.set_default('train_kimg', 1 << 16)
     app.run(main)
+
+## You ran with fixmatch_train.1@70-70 with 70 validation samples

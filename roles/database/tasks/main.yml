@@ -1,0 +1,123 @@
+---
+
+- name: Create files directory
+  file: path={{ role_path }}/vars/files/ state=directory
+
+- set_fact:
+    test_namespace: '{{ namespace }}'
+
+
+
+- name: Check if database already exists
+  shell: kubectl get pods --namespace={{ namespace }} | grep {{ namespace }} | cat
+  register: pod_status
+  ignore_errors: True
+
+- name: Check if secrets already exists
+  shell: kubectl describe secret database-secret-config --namespace={{ namespace }} | grep {{ namespace }} | cat
+  register: secrets_status
+  ignore_errors: True
+
+- name: Check if storage already exists
+  shell: kubectl describe persistentvolumeclaim postgres-pv-claim --namespace={{ namespace }} | grep {{ namespace }} | cat
+  register: storage_status
+  ignore_errors: True
+
+- name: Check if deployment already exists
+  shell: kubectl describe deployment --namespace={{ namespace }} | grep {{ namespace }} | cat
+  register: deployment_status
+  ignore_errors: True
+
+- name: Check if service already exists
+  shell: kubectl describe service --namespace={{ namespace }} | grep {{ namespace }} | cat
+  register: service_status
+  ignore_errors: True
+
+  
+- shell: echo -n "{{ secrets.projects.preference_finder.postgres.dbname }}" | base64 -
+  register: dbname
+
+- shell: echo -n "{{ secrets.projects.preference_finder.postgres.user }}" | base64 -
+  register: user
+
+- shell: echo -n "{{ secrets.projects.preference_finder.postgres.password }}" | base64 -
+  register: password
+
+- name: Copy tempalte
+  template: 
+    src="{{ role_path }}/vars/postgres-secrets.yaml"
+    dest="{{ role_path }}/vars/files/postgres-secrets.yaml"
+  when: 
+    - "'postgres' not in pod_status.stdout" 
+    - "test_namespace not in secrets_status.stdout"
+
+- name: Encode dbname
+  replace:
+    path: "{{ role_path }}/vars/files/postgres-secrets.yaml"
+    regexp: 'temporary_db_name'
+    replace: '{{ dbname.stdout }}'
+
+- name: Encode user
+  replace:
+    path: "{{ role_path }}/vars/files/postgres-secrets.yaml"
+    regexp: 'temporary_username'
+    replace: '{{ user.stdout }}'
+
+- name: Encode password
+  replace:
+    path: "{{ role_path }}/vars/files/postgres-secrets.yaml"
+    regexp: 'temporary_password'
+    replace: '{{ password.stdout }}'
+
+- name: Create secrets
+  command: kubectl create -f {{ role_path }}/vars/files/postgres-secrets.yaml --namespace={{ namespace }}  
+  when: 
+    - "'postgres' not in pod_status.stdout" 
+    - "test_namespace not in secrets_status.stdout"
+
+- name: Register secrets output
+  shell: kubectl get secret database-secret-config -o yaml --namespace={{ namespace }}
+  register: config
+
+- name: secrets config
+  debug: var=config.stdout_lines
+  
+
+- name: Create storage related deployments
+  command: kubectl create -f {{ role_path }}/vars/postgres-storage.yaml --namespace={{ namespace }}  
+  when: 
+    - "'postgres' not in pod_status.stdout"
+    - "test_namespace not in storage_status.stdout"
+
+- name: Register storage output
+  shell: kubectl describe persistentvolumeclaim postgres-pv-claim --namespace={{ namespace }}
+  register: config
+    
+- name: storage config
+  debug: var=config.stdout_lines
+
+- name: Create Postgres deployment
+  command: kubectl create -f {{ role_path }}/vars/postgres-deployment.yaml --namespace={{ namespace }}  
+  when: 
+    - "'postgres' not in pod_status.stdout"
+    - "test_namespace not in deployment_status.stdout"
+
+- name: Register Postgres output
+  shell: kubectl describe deployment --namespace={{ namespace }}
+  register: config
+  
+- name: Postgres config
+  debug: var=config.stdout_lines
+
+- name: Create Postgres Service
+  command: kubectl create -f {{ role_path }}/vars/postgres-service.yaml --namespace={{ namespace }}  
+  when: 
+    - "'postgres' not in pod_status.stdout"
+    - "test_namespace not in service_status.stdout"
+
+- name: Register service output
+  shell: kubectl get svc postgres --namespace={{ namespace }}  
+  register: config
+
+- name: service config
+  debug: var=config.stdout_lines

@@ -1,0 +1,10 @@
+name: model
+dependencies:
+  - pip:
+    - absl-py
+    - easydict
+    - cython
+    - numpy
+    - tensorflow-gpu==1.14
+    - tqdm
+    - pillow

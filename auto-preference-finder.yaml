@@ -6,9 +6,10 @@
   become: false
 
   vars_files:
-    - /home/ubuntu/.secrets/secrets.yaml
-    - vars/main.yaml
-  
+    #- /home/ubuntu/.secrets/secrets.yaml
+    #- vars/main.yaml
+    - ../../base/util/vault/vault.yml
   roles:
-    - environment
-    # - deployment
+    # - namespace
+    - delete-all
+    - database

@@ -1,0 +1,17 @@
+apiVersion: skaffold/v2beta5
+kind: Config
+metadata:
+  name: frontend
+build:
+  artifacts:
+  - image: streamlit
+    context: ./app/
+  local:
+    useDockerCLI: true
+deploy:
+  kubectl:
+    manifests:
+    - ./app/kubernetes/deployment.yaml
+portForward:
+  - resourceType: deployment
+    resourceName: streamlit-webapp

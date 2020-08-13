@@ -1,0 +1,14 @@
+---
+- set_fact:
+    test_namespace: '{{ namespace }}'
+
+- name: delete service postgres
+  command: kubectl delete service postgres --namespace={{ namespace }}
+- name: delete deployment postgres
+  command: kubectl delete deployment postgres --namespace={{ namespace }}
+- name: delete configmap postgres-initdb-config
+  command: kubectl delete configmap postgres-initdb-config --namespace={{ namespace }}
+- name: delete persistentvolumeclaim postgres-pv-claim
+  command: kubectl delete persistentvolumeclaim postgres-pv-claim --namespace={{ namespace }}
+- name: delete persistentvolume postgres-pv
+  command: kubectl delete persistentvolume postgres-pv --namespace={{ namespace }}
