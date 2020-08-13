@@ -26,6 +26,9 @@ __pycache__/
 *.txt
 checkpoint
 cp.ckpt.*
+*.pb
+*.index
+variables.*
 
 roles/modeling/fast/training_1/
 roles/modeling/images/
