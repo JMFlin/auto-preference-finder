@@ -22,7 +22,7 @@ def download_blobs():
     if not os.path.exists("./images/unclassified/"):
         os.mkdir("./images/unclassified/")
 
-    if not os.listdir('./images/unclassified/female') :
+    if not os.path.exists('./images/unclassified/female') :
 
         _, bucket = initialize_gcloud()
         LOGGER.info(f'Beginning to download images from bucket')

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit-webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+        app: streamlit-webapp
+  template:
+    metadata:
+      labels:
+        app: streamlit-webapp
+    spec:
+      containers:
+      - name: streamlit-webapp
+        image: app
+        imagePullPolicy: IfNotPresent
+        #ports:
+        #  - containerPort: 8080

@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit-webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+        app: streamlit-webapp
+  template:
+    metadata:
+      labels:
+        app: streamlit-webapp
+    spec:
+      containers:
+      - name: streamlit-webapp
+        image: app
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8501 #8080 # 8501
+#---
+#kind: Ingress
+#metadata:
+#  name: streamlit-webapp-ingress
+#  annotations:
+#    nginx.ingress.kubernetes.io/ssl-redirect: \"false\"
+#spec:
+#  rules:
+#  - http:
+#      paths:
+#      - path: /meow
+#        backend:
+#          serviceName: streamlit-webapp-service
+#          servicePort: 80

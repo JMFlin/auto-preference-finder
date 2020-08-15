@@ -11,7 +11,8 @@ build:
 deploy:
   kubectl:
     manifests:
-    - ./app/kubernetes/deployment.yaml
+    - ./app/kubernetes/k8s-deploy.yml
+    - ./app/kubernetes/k8s-service.yml
 portForward:
   - resourceType: deployment
     resourceName: streamlit-webapp

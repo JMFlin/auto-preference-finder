@@ -33,9 +33,11 @@ variables.*
 roles/modeling/fast/training_1/
 roles/modeling/images/
 roles/modeling/saved_model/
+
 roles/models/experiments/
 roles/models/images/
 roles/models/saved_model/
-roles/frontend/*.txt
-roles/frontend/images/
-roles/frontend/files/
+
+roles/frontend/app/*.txt
+roles/frontend/app/images/
+roles/frontend/app/files/
