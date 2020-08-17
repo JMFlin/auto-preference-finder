@@ -29,3 +29,6 @@
 - name: namespace config
   debug: var=config.stdout_lines
   
+- name: User run command
+  debug:
+    msg: "To set the default namespace run kubectl config set-context $(kubectl config current-context) --namespace={{ namespace }}"

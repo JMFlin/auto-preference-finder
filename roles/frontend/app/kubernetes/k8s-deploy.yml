@@ -13,23 +13,29 @@ spec:
       labels:
         app: streamlit-webapp
     spec:
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: storage-key
       containers:
       - name: streamlit-webapp
         image: app
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
+        - name: GCS_BUCKET
+          value: acn-dai-preferences
         imagePullPolicy: IfNotPresent
         ports:
-          - containerPort: 8501 #8080 # 8501
-#---
-#kind: Ingress
-#metadata:
-#  name: streamlit-webapp-ingress
-#  annotations:
-#    nginx.ingress.kubernetes.io/ssl-redirect: \"false\"
-#spec:
-#  rules:
-#  - http:
-#      paths:
-#      - path: /meow
-#        backend:
-#          serviceName: streamlit-webapp-service
-#          servicePort: 80
+          - containerPort: 8501 # 8080 # 8501
+#          resources:
+#            requests:
+#              memory: "32Mi"
+#              cpu: "125m"
+#            limits:
+#              memory: "64Mi"
+#              cpu: "250m"
+  

@@ -1,0 +1,3 @@
+- name: Create service-account
+  command: kubectl create secret generic storage-key --from-file=key.json={{ lookup('env','GOOGLE_APPLICATION_CREDENTIALS') }}
+  ignore_errors: yes
