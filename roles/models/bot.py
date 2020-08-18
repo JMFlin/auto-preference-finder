@@ -740,7 +740,7 @@ if __name__ == "__main__":
                     sys.exit(0)
             sleep(random()*10)
 
-        _preprocess_images()
+        #_preprocess_images()
 
     elif mode == "set_preferences":
 
