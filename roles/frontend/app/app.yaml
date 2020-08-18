@@ -8,4 +8,4 @@ resources:
   memory_gb: 5
   disk_size_gb: 25
 env_variables:
-  GCS_BUCKET: "acn-dai-preferences"
+  GCS_BUCKET: "{{ secrets.projects.auto-finder.bucket }}"
