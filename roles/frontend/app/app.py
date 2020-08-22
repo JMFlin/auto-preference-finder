@@ -4,8 +4,12 @@ import streamlit as st
 import logging
 import os
 import pandas as pd
-from google.cloud import storage
 import tensorflow as tf
+import random
+import time
+from google.cloud import storage
+
+version = 'v1'
 
 # tar -zcvf archive.tar.gz female/ &&  split -b 250M archive.tar.gz "archive.part" && rm archive.tar.gz
 # find . -type f | awk -v N=10 -F / 'match($0, /.*\//, m) && a[m[0]]++ < N' | xargs -r -d '\n' tar -rvf backup.tar
@@ -24,10 +28,12 @@ def download_blobs():
 
     if not os.path.exists('./images/unclassified/female') :
 
+        num = random.randint(1,29)
+
         _, bucket = initialize_gcloud()
         LOGGER.info(f'Beginning to download images from bucket')
 
-        blob = bucket.blob('preferences/archive/archive.tar.gz')
+        blob = bucket.blob(f'preferences/data_partitions/{version}/archive_partition_{num}.tar.gz')
         blob.download_to_filename('./images/unclassified/archive.tar.gz')
 
         LOGGER.info(f'Extracting files from archive')
@@ -43,13 +49,12 @@ def initialize_gcloud():
     bucket = storage_client.bucket(bucket_name)
     return(storage_client, bucket)
 
-def download_create_model(userid):
+def download_model(userid):
     
     """Downloads a blob from the bucket."""
     
     if not os.path.exists(f'./saved_model/saved_model/model'):
         _, bucket = initialize_gcloud()
-        import time
         try:
             blob = bucket.blob(f'users/{userid}/saved_model/model.tar.gz')
             LOGGER.info(f'Beginning to download model from bucket with url users/{userid}/saved_model/model.tar.gz') 
@@ -63,32 +68,7 @@ def download_create_model(userid):
         except:
             pass
 
-def model_predict(image, userid):
-    download_create_model(userid)
-    
-    model = tf.keras.models.load_model('./saved_model/saved_model/model')
-    
-    img = tf.keras.preprocessing.image.load_img(
-        f'./images/unclassified/female/{image}', target_size=(518,518)
-    )
-    img_array = tf.keras.preprocessing.image.img_to_array(img)
-    img_array = tf.expand_dims(img_array, 0)
-
-
-    predictions = model.predict(img_array)
-
-    score = predictions[0]
-    if score > 0.5:
-        st.write(f'Model predicted a {score} probability of you liking.')
-        st.write(f'Swiping RIGHT')
-    else:
-        st.write(f'Model predicted a {score} probability of you liking.')
-        st.write(f'Swiping LEFT')
-    
-    LOGGER.info(f'Model predicted {score} for image {image}')
-    return score
-
-def initialize():
+def initialize() -> list[str]:
 
     if not os.path.exists("./files"):
         os.mkdir("./files")
@@ -134,7 +114,7 @@ def pass_image(image):
 def show_image(result):
     st.image(image = f'./images/unclassified/female/{result}', use_column_width=True)
 
-def image_state():
+def image_state() -> int:
     if os.path.exists("./files/image_state_file.txt"):
         with open('./files/image_state_file.txt') as f:
             samples_count = int(f.readline())
@@ -145,7 +125,7 @@ def image_state():
         samples_count = 0
     return(samples_count)
 
-def restart():
+def restart() -> list[str]:
     LOGGER.info(f'\nUser restarted image labeling\n')
     if os.path.exists("./files/image_state_file.txt"):
         os.remove("./files/image_state_file.txt")
@@ -205,9 +185,10 @@ def upload_blob(userid):
     LOGGER.info(f'File preferences.csv uploaded to {bucket_name}/users/{userid}/preferences.csv')
 
 
-def hash_identifier(identifier):
+def hash_identifier(identifier) -> str:
     identifier = identifier.lower()
     return hashlib.sha256(identifier.encode()).hexdigest()
+
 
 def sync_likes_dislikes(images):
 
@@ -244,51 +225,63 @@ def main():
     This web app is for creating a training set of your preferences for Tinder. These samples will then be used to train either ResNet50 + FixMatch or VGG16 transfer learning. This is a hobby application and in no way related to Match Groups official Tinder app.
     """)
 
-    userid = st.text_input("Please enter your user id", "")
-    userid = hash_identifier(userid)
+    userid = st.text_input("Please enter your xoauth-token", "")
+    #if my_profile.email is not None:
+    #    userid = my_profile.email
+    #    userid = hash_identifier(userid)
+    #else:
+    #    logger.error("Failed to get an identifier")
+    #    st.write("Unable to connect to your tinder account")
+    options = ['Set preferences', 'Watch your model play tinder'] 
+    something = st.sidebar.selectbox("Select value.", options, options.index(st.selectbox) if st.selectbox else 0)
+    preferences = st.sidebar.checkbox("Create preference set")
+    play = st.sidebar.checkbox("Use a model to play tinder")
 
-    download_blobs()
-    download_create_model(userid)
+    if preferences and not play:
+    
+        download_blobs()
 
-    images = initialize()
+        images = initialize()
 
-    if os.path.exists("./files/image_state_file.txt"):
-        with open('./files/image_state_file.txt') as f:
-            samples_count = int(f.readline())
-    else:
-        samples_count = 0
+        if os.path.exists("./files/image_state_file.txt"):
+            with open('./files/image_state_file.txt') as f:
+                samples_count = int(f.readline())
+        else:
+            samples_count = 0
 
-    if st.sidebar.button(label = 'Like'):
+        if st.sidebar.button(label = 'Like'):
 
-        like_image(images[samples_count])
-        samples_count = image_state()
-        
-    if st.sidebar.button(label = 'Dislike'):
+            like_image(images[samples_count])
+            samples_count = image_state()
+            
+        if st.sidebar.button(label = 'Dislike'):
 
-        dislike_image(images[samples_count])
-        samples_count = image_state()
+            dislike_image(images[samples_count])
+            samples_count = image_state()
 
-    if st.sidebar.button(label = 'Pass'):
-        pass_image(images[samples_count])
+        if st.sidebar.button(label = 'Pass'):
+            pass_image(images[samples_count])
 
-    if st.sidebar.button(label = 'Done'):
-        if len(userid) > 0:
-            merge_files(userid)
-            upload_blob(userid)
+        if st.sidebar.button(label = 'Done'):
+            if len(userid) > 0:
+                merge_files(userid)
+                upload_blob(userid)
+                images = restart()
+                samples_count = 0
+                st.write("The sample data has been recorded and the training process will begin shortly!")
+            else:
+                st.write("Please enter a user id")
+
+        if st.sidebar.button(label = 'Restart'):
             images = restart()
             samples_count = 0
-            st.write("The sample data has been recorded and the training process will begin shortly!")
-        else:
-            st.write("Please enter a user id")
 
-    if st.sidebar.button(label = 'Restart'):
-        images = restart()
-        samples_count = 0
-
-    images, likes, dislikes, passes = sync_likes_dislikes(images)
-    st.write(f'Images: {len(images)} Likes: {len(likes)} Dislikes: {len(dislikes)} Passes: {len(passes)}')
-    st.write(f'{round(samples_count / 250 * 100, 1)}% complete to minimum suggested amount')
-    show_image(images[samples_count])
-    model_predict(images[samples_count], userid)
+        images, likes, dislikes, passes = sync_likes_dislikes(images)
+        st.write(f'Images: {len(images)} Likes: {len(likes)} Dislikes: {len(dislikes)} Passes: {len(passes)}')
+        st.write(f'{round(samples_count / 250 * 100, 1)}% complete to minimum suggested amount')
+        show_image(images[samples_count])
+    
+    if play and not preferences:
+        print("not done")
 
 main()
