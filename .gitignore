@@ -40,3 +40,4 @@ roles/models/saved_model/
 
 roles/frontend/app/images/
 roles/frontend/app/files/
+roles/frontend/app/kubernetes/files

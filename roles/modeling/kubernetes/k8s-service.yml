@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
     creationTimestamp: null
-    name: streamlit-webapp-service
+    name: model-trainer-service
 spec:
   ports:
   - port: 8501
@@ -12,7 +12,7 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: streamlit-webapp
+    app: model-trainer
   type: LoadBalancer
 status:
     loadBalancer: {}

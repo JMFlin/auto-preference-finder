@@ -27,7 +27,7 @@ spec:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
         - name: GCS_BUCKET
-          value: "{{ secrets.projects.auto-finder.bucket }}"
+          value: acn-dai-preferences
         imagePullPolicy: IfNotPresent
         ports:
           - containerPort: 8501 # 8080 # 8501
@@ -35,7 +35,7 @@ spec:
           requests:
             memory: "400Mi"
             cpu: "120m"
-          #limits:
-          #  memory: "128Mi"
-          #  cpu: "250m"
- 
+#            limits:
+#              memory: "64Mi"
+#              cpu: "250m"
+  

@@ -1,0 +1,23 @@
+apiVersion: skaffold/v2beta5
+kind: Config
+metadata:
+  name: frontend
+build:
+  artifacts:
+    - image: streamlit
+      context: ./frontend/app/
+    - image: trainer
+      context: ./modeling/fast/
+  local:
+    useDockerCLI: true
+deploy:
+  kubectl:
+    manifests:
+    - ./frontend/app/kubernetes/files/k8s-deploy.yml
+    - ./frontend/app/kubernetes/k8s-service.yml
+    - ./modeling/kubernetes/k8s-deploy.yml
+    - ./forentend/app/kubernetes/k8s-autoscale.yml
+    - ./modeling/kubernetes/k8s-autoscale.yml
+portForward:
+  - resourceType: deployment
+    resourceName: streamlit-webapp
