@@ -15,7 +15,11 @@ import shutil
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
-LOGGER.info(f'tf version: {tf.version.VERSION}')
+LOGGER.info(f'TensorFlow  version: {tf.version.VERSION}\n')
+
+version = 1
+export_path = os.path.join('saved_model/model', str(version))
+LOGGER.info(f'Export path: {export_path}\n')
 
 #import pathlib
 #dataset_url = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
@@ -230,7 +234,18 @@ def train(userid):
     callbacks=[cp_callback]
   )
 
-  model.save('saved_model/model') 
+  #model.save('saved_model/model') 
+
+  tf.keras.models.save_model(
+      model,
+      export_path,
+      overwrite=True,
+      include_optimizer=True,
+      save_format=None,
+      signatures=None,
+      options=None
+  )
+
 
   def make_tarfile(output_filename, source_dir):
     with tarfile.open(output_filename, "w:gz") as tar:

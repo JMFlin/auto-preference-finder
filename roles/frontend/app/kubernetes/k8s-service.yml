@@ -6,7 +6,7 @@ metadata:
     name: streamlit-webapp-service
 spec:
   ports:
-  - port: 8501 # 80
+  - port: 8501
     targetPort: 8501 # 8080 # 8501
     protocol: TCP
     name: http

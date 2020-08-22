@@ -38,6 +38,5 @@ roles/models/experiments/
 roles/models/images/
 roles/models/saved_model/
 
-roles/frontend/app/*.txt
 roles/frontend/app/images/
 roles/frontend/app/files/

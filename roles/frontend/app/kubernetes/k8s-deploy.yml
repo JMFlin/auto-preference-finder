@@ -26,6 +26,15 @@ spec:
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
+        - name: GCS_BUCKET
+          value: "{{ secrets.projects.auto-finder.bucket }}"
         imagePullPolicy: IfNotPresent
         ports:
           - containerPort: 8501 # 8080 # 8501
+#          resources:
+#            requests:
+#              memory: "32Mi"
+#              cpu: "125m"
+#            limits:
+#              memory: "64Mi"
+#              cpu: "250m"

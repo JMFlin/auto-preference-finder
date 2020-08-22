@@ -273,7 +273,6 @@ def main():
 
     if st.sidebar.button(label = 'Done'):
         if len(userid) > 0:
-            #hashed_identifier = hash_identifier(userid)
             merge_files(userid)
             upload_blob(userid)
             images = restart()
