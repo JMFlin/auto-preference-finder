@@ -2,24 +2,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: streamlit-webapp
+  name: model-trainer
 spec:
   replicas: 1
   selector:
     matchLabels:
-        app: streamlit-webapp
+        app: model-trainer
   template:
     metadata:
       labels:
-        app: streamlit-webapp
+        app: model-trainer
     spec:
       volumes:
       - name: google-cloud-key
         secret:
           secretName: storage-key
       containers:
-      - name: streamlit-webapp
-        image: app
+      - name: model-trainer
+        image: trainer
         volumeMounts:
         - name: google-cloud-key
           mountPath: /var/secrets/google
@@ -27,14 +27,14 @@ spec:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
         - name: GCS_BUCKET
-          value: "{{ secrets.projects.auto-finder.bucket }}"
+          value: acn-dai-preferences
         imagePullPolicy: IfNotPresent
-        ports:
-          - containerPort: 8501 # 8080 # 8501
-        resources:
-          requests:
-            memory: "400Mi"
-            cpu: "120m"
+        #ports:
+        #  - containerPort: 8080 # 8080 # 8501
+        #resources:
+        #  requests:
+        #    memory: "400Mi"
+        #    cpu: "120m"
           #limits:
           #  memory: "128Mi"
           #  cpu: "250m"

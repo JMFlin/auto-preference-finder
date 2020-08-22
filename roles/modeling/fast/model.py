@@ -12,6 +12,7 @@ import time
 import pandas as pd
 import shutil
 
+
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ LOGGER.info(f'Export path: {export_path}\n')
 #import pathlib
 #dataset_url = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
 #data_dir = tf.keras.utils.get_file(origin=dataset_url, 
-#                                   fname='flower_photos', 
-#                                   untar=True)
+ #                                  fname='trainig', 
+ #                                  untar=True)
 #data_dir = pathlib.Path(data_dir)
 
 if not os.path.exists("./data/"):
@@ -38,6 +39,8 @@ if not os.path.exists("./training_1/"):
     os.mkdir("./training_1/")
 if not os.path.exists("./saved_model/"):
     os.mkdir("./saved_model/")
+if not os.path.exists(f'./saved_model/{version}'):
+    os.mkdir(f'./saved_model/{version}')
 
 checkpoint_path = "training_1/cp.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
@@ -45,8 +48,6 @@ checkpoint_dir = os.path.dirname(checkpoint_path)
 bucket_name = os.getenv('GCS_BUCKET')
 storage_client = storage.Client()
 bucket = storage_client.bucket(bucket_name)
-userid_list = []
-trainer_list = []
 
 BATCH_SIZE = 16
 IMG_HEIGHT = 518
@@ -56,6 +57,9 @@ EPOCHS = 50
 VALIDATION_SPLIT = 0.2
 
 def watcher():
+
+  userid_list = []
+  trainer_list = []
   
   def download_blobs(userid):
       """Downloads a blob from the bucket."""
@@ -69,7 +73,7 @@ def watcher():
 
   def my_list_bucket(bucket_name):
     resource_list = []
-    trainer_list = []
+    l_list = []
     a_bucket = storage_client.lookup_bucket(bucket_name)
     bucket_iterator = a_bucket.list_blobs()
     
@@ -82,10 +86,10 @@ def watcher():
 
     for userid in userid_list:
       if sum(1 for s in resource_list if userid in s) == 1:
-        trainer_list.append(userid)
+        l_list.append(userid)
 
-    return(trainer_list)
-
+    return(l_list)
+  
   while True:
     if len(trainer_list) > 0:
       LOGGER.info(f'userid(s) {trainer_list} found!')
@@ -99,7 +103,8 @@ def watcher():
         watcher()
     else:
       LOGGER.info(f'Watching {bucket_name}/users/')
-      time.sleep(60*30)
+      #time.sleep(60*30)
+      time.sleep(10)
       trainer_list = my_list_bucket(bucket)
 
 def create_datasets():
@@ -211,7 +216,6 @@ def train(userid):
     x = layers.Dropout(0.5)(x)
     outputs = layers.Dense(units, activation=activation)(x)
     return tf.keras.Model(inputs, outputs)
-
 
   model = make_model(input_shape=(IMG_HEIGHT, IMG_WIDTH) + (3,), num_classes=NUM_CLASSES)  
 
