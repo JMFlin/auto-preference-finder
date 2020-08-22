@@ -26,7 +26,9 @@ def create_common_archives(height, width):
     temporary_archive_folder = './images/unclassified/tmp'
     filename = f'archive_partition_{height}_{width}'
 
-    images = [f for f in os.listdir(f'{source_image_folder}') if os.path.isfile(os.path.join(f'{source_image_folder}', f))]
+    #images = [f for f in os.listdir(f'{source_image_folder}') if os.path.isfile(os.path.join(f'{source_image_folder}', f))]
+    images = [f for f in os.listdir(f'{source_image_folder}') if os.path.isfile(os.path.join(f'{source_image_folder}', f)) and os.path.join(f'{source_image_folder}', f).endswith(('.JPG'))]
+    print(images)
     rounds = math.ceil(len(images)/(files_per_tar))
     
     logger.info(f'Starting to build {rounds} datasets out of {len(images)} files')
