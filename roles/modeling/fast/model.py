@@ -56,12 +56,7 @@ NUM_CLASSES = 2
 EPOCHS = 50
 VALIDATION_SPLIT = 0.2
 
-def watcher():
-
-  userid_list = []
-  trainer_list = []
-  
-  def download_blobs(userid):
+def download_blobs(userid):
       """Downloads a blob from the bucket."""
 
       LOGGER.info(f'Beginning to download images from bucket {bucket_name} with url users/{userid}/preferences.csv')
@@ -71,24 +66,29 @@ def watcher():
 
       LOGGER.info(f'Blobs downloaded\n')
 
-  def my_list_bucket(bucket_name):
-    resource_list = []
-    l_list = []
-    a_bucket = storage_client.lookup_bucket(bucket_name)
-    bucket_iterator = a_bucket.list_blobs()
-    
-    for resource in bucket_iterator:
-      if 'users' in resource.name:
-        resource_list.append(resource.name)
-        userid = resource.name.split('/')[1]
-        if userid not in userid_list:
-          userid_list.append(userid)
+def my_list_bucket(bucket_name):
+  resource_list = []
+  l_list = []
+  a_bucket = storage_client.lookup_bucket(bucket_name)
+  bucket_iterator = a_bucket.list_blobs()
+  
+  for resource in bucket_iterator:
+    if 'users' in resource.name:
+      resource_list.append(resource.name)
+      userid = resource.name.split('/')[1]
+      if userid not in userid_list:
+        userid_list.append(userid)
 
-    for userid in userid_list:
-      if sum(1 for s in resource_list if userid in s) == 1:
-        l_list.append(userid)
+  for userid in userid_list:
+    if sum(1 for s in resource_list if userid in s) == 1:
+      l_list.append(userid)
 
-    return(l_list)
+  return(l_list)
+
+def watcher():
+
+  userid_list = []
+  trainer_list = []
   
   while True:
     if len(trainer_list) > 0:
@@ -164,58 +164,6 @@ def train(userid):
   data_augmentation = tf.keras.Sequential([
     layers.experimental.preprocessing.RandomRotation(0.1),
   ])
-
-  # Define a simple sequential model
-  def make_model(input_shape, num_classes):
-    inputs = tf.keras.Input(shape=input_shape)
-    # Image augmentation block
-    x = data_augmentation(inputs)
-
-    # Entry block
-    x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(x)
-    x = layers.Conv2D(32, 3, strides=2, padding="same")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
-
-    x = layers.Conv2D(64, 3, padding="same")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
-
-    previous_block_activation = x  # Set aside residual
-
-    for size in [128, 256, 512, 728]:
-        x = layers.Activation("relu")(x)
-        x = layers.SeparableConv2D(size, 3, padding="same")(x)
-        x = layers.BatchNormalization()(x)
-
-        x = layers.Activation("relu")(x)
-        x = layers.SeparableConv2D(size, 3, padding="same")(x)
-        x = layers.BatchNormalization()(x)
-
-        x = layers.MaxPooling2D(3, strides=2, padding="same")(x)
-
-        # Project residual
-        residual = layers.Conv2D(size, 1, strides=2, padding="same")(
-            previous_block_activation
-        )
-        x = layers.add([x, residual])  # Add back residual
-        previous_block_activation = x  # Set aside next residual
-
-    x = layers.SeparableConv2D(1024, 3, padding="same")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
-
-    x = layers.GlobalAveragePooling2D()(x)
-    if num_classes == 2:
-        activation = "sigmoid"
-        units = 1
-    else:
-        activation = "softmax"
-        units = num_classes
-
-    x = layers.Dropout(0.5)(x)
-    outputs = layers.Dense(units, activation=activation)(x)
-    return tf.keras.Model(inputs, outputs)
 
   model = make_model(input_shape=(IMG_HEIGHT, IMG_WIDTH) + (3,), num_classes=NUM_CLASSES)  
 
@@ -293,5 +241,58 @@ def cleanup():
               LOGGER.info('Failed to delete %s. Reason: %s' % (file_path, e))
   _cleanup("./training_1")
   _cleanup("./saved_model")
+
+
+# Define a simple sequential model
+  def make_model(input_shape, num_classes):
+    inputs = tf.keras.Input(shape=input_shape)
+    # Image augmentation block
+    x = data_augmentation(inputs)
+
+    # Entry block
+    x = layers.experimental.preprocessing.Rescaling(1.0 / 255)(x)
+    x = layers.Conv2D(32, 3, strides=2, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
+
+    x = layers.Conv2D(64, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
+
+    previous_block_activation = x  # Set aside residual
+
+    for size in [128, 256, 512, 728]:
+        x = layers.Activation("relu")(x)
+        x = layers.SeparableConv2D(size, 3, padding="same")(x)
+        x = layers.BatchNormalization()(x)
+
+        x = layers.Activation("relu")(x)
+        x = layers.SeparableConv2D(size, 3, padding="same")(x)
+        x = layers.BatchNormalization()(x)
+
+        x = layers.MaxPooling2D(3, strides=2, padding="same")(x)
+
+        # Project residual
+        residual = layers.Conv2D(size, 1, strides=2, padding="same")(
+            previous_block_activation
+        )
+        x = layers.add([x, residual])  # Add back residual
+        previous_block_activation = x  # Set aside next residual
+
+    x = layers.SeparableConv2D(1024, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
+
+    x = layers.GlobalAveragePooling2D()(x)
+    if num_classes == 2:
+        activation = "sigmoid"
+        units = 1
+    else:
+        activation = "softmax"
+        units = num_classes
+
+    x = layers.Dropout(0.5)(x)
+    outputs = layers.Dense(units, activation=activation)(x)
+    return tf.keras.Model(inputs, outputs)
 
 watcher()

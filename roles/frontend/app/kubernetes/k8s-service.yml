@@ -4,7 +4,7 @@ kind: Service
 metadata:
   creationTimestamp: null
   name: streamlit-webapp-service
-  namespace: at-app-frontend
+#  namespace: at-app-frontend
 spec:
   ports:
   - port: 80
@@ -13,6 +13,9 @@ spec:
     name: http
   selector:
     app: streamlit-webapp
-  type: LoadBalancer
-status:
-    loadBalancer: {}
+  type: NodePort
+#status:
+#    loadBalancer: {}
+
+
+

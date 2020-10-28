@@ -1,27 +1,22 @@
 import tensorflow as tf
-import random
-import sys
-import os
+#import random
+#import sys
+#import os
 import logging
 import requests
 import datetime
 import json
-from time import time
+import streamlit as st
+import time
+#from time import time
 from geopy.geocoders import Nominatim
+
+URL = "https://api.gotinder.com"
+
+geolocator = Nominatim(user_agent='auto-finder')
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
-
-URL = "https://api.gotinder.com"
-TOKEN = "INSERT_TOKEN"
-
-if not os.path.exists("./images/"):
-    os.mkdir("./images/")
-
-if not os.path.exists("./images/tmp/"):
-    os.mkdir("./images/tmp/")
-
-geolocator = Nominatim(user_agent='auto-finder')
 
 class Person(object):
 
@@ -60,6 +55,9 @@ class Person(object):
     def predict_likeliness(self, model):
         ratings = []
         LOGGER.info(f'Person has {len(self.images)} images in profile')
+        imageLocation = st.empty()
+        totalScoreLocation = st.empty()
+
         for image in self.images:
             req = requests.get(image, stream=True)
             tmp_filename = f'./images/tmp/run.jpg'
@@ -71,7 +69,7 @@ class Person(object):
             #if img:
             #img = img.convert("L")
             #image.save(tmp_filename, "jpeg")
-
+            
             img = tf.keras.preprocessing.image.load_img(
                 f'./images/tmp/run.jpg', target_size=(518,518)
             )
@@ -79,14 +77,25 @@ class Person(object):
             img_array = tf.expand_dims(img_array, 0)
 
             predictions = model.predict(img_array)
+            imageLocation.image(image = f'./images/tmp/run.jpg', caption=f'Predicted score {predictions[0]}', width = 200)
+
             LOGGER.info(f'Image {image} has a score of {predictions[0]}')
             ratings.append(predictions[0])
+            if len(ratings) == 0:
+                totalScoreLocation.text(f'Profile total running score: 0')
+            elif len(ratings) == 1:
+                totalScoreLocation.text(f'Profile total running score: {ratings[0]}')
+            else:
+                totalScoreLocation.text(f'Profile total running score: {sum(ratings) / len(ratings)}')
+
+            time.sleep(2)
+
         ratings.sort(reverse=True)
         if len(ratings) == 0:
             return 0.001
         elif len(ratings) == 1:
             return ratings[0]
-        return(ratings[0]*0.6 + sum(ratings[1:])/len(ratings[1:])*0.4)
+        return(sum(ratings) / len(ratings))
 
 
 class Profile(Person):
@@ -131,55 +140,3 @@ class tinderAPI():
     def nearby_persons(self):
         data = requests.get(URL + "/v2/recs/core", headers={"X-Auth-Token": self._token}).json()
         return list(map(lambda user: Person(user["user"], self), data["data"]["results"]))
-
-
-def main():
-    
-    api = tinderAPI(TOKEN)
-    session_matches = []
-    total_session_likes = 2
-    likes = 0
-    end_time = time() + 60*60*2
-    model = tf.keras.models.load_model('./saved_model/saved_model/model')
-    while time() < end_time:
-        
-        persons = api.nearby_persons()
-        #pos_schools = ["Universität Zürich", "University of Zurich", "UZH"]
-        
-        LOGGER.info(f'\nFound {len(persons)} persons nearby')
-        for person in persons:
-            LOGGER.info("#---------------------------------#")
-            LOGGER.info(f'Analyzing {person}')
-            score = person.predict_likeliness(model) #model
-            LOGGER.info(f'Profile has a total score of {score}')
-            #for school in pos_schools:
-            #    if school in person.schools:
-            #        print()
-            #        score *= 1.2
-
-            if score > 0.5:
-                res = person.like()
-                LOGGER.info('LIKE')
-                LOGGER.info(f'Is match: {res["is_match"]}')
-                if res["is_match"]:
-                    session_matches.append(person.name)
-            else:
-                res = person.dislike()
-                LOGGER.info('DISLIKE')
-
-            likes = likes + 1
-            
-            LOGGER.info(f'Session likes + dislikes is {likes}')
-            
-            if likes >= total_session_likes:
-                break
-
-        if likes >= total_session_likes:
-                break
-
-    LOGGER.info(f'Total matches this sessions was {len(session_matches)}')
-
-    if len(session_matches) > 0:
-        LOGGER.info(f'These are {json.dumps(session_matches)}')
-
-main()

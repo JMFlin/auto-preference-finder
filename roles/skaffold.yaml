@@ -15,9 +15,9 @@ deploy:
     manifests:
     - ./frontend/app/kubernetes/files/k8s-deploy.yml
     - ./frontend/app/kubernetes/k8s-service.yml
-    - ./modeling/kubernetes/k8s-deploy.yml
-    - ./forentend/app/kubernetes/k8s-autoscale.yml
-    - ./modeling/kubernetes/k8s-autoscale.yml
+#    - ./modeling/kubernetes/k8s-deploy.yml
+#    - ./forentend/app/kubernetes/k8s-autoscale.yml
+#    - ./modeling/kubernetes/k8s-autoscale.yml
 portForward:
   - resourceType: deployment
     resourceName: streamlit-webapp
